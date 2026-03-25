@@ -358,6 +358,7 @@ $("#scanBtn").onclick = async () => {
     setPhase("ingredients");
   } catch(e) {
     clearInterval(dt);
+    console.error("Scan error:", e);
     err(e.message || "Could not scan. Try a clearer photo.");
     setPhase("upload");
   }
@@ -402,6 +403,7 @@ $("#genBtn").onclick = async () => {
     setPhase("recipes");
   } catch(e) {
     clearInterval(dt);
+    console.error("Recipe error:", e);
     err(e.message || "Recipe generation failed. Try again.");
     setPhase("ingredients");
   }
