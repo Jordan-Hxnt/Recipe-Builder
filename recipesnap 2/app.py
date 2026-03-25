@@ -3,6 +3,7 @@ import sys
 import json
 import base64
 import logging
+import urllib.request
 from flask import Flask, render_template, request, jsonify
 
 # ── Logging ──
@@ -16,22 +17,31 @@ log = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024  # 32MB
 
-GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
-MODEL = "gemini-2.0-flash"
-API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={GEMINI_KEY}"
+OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+# Free router auto-picks the best free model that supports vision
+VISION_MODEL = "qwen/qwen2.5-vl-72b-instruct:free"
+TEXT_MODEL = "openrouter/free"
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
 
-def call_gemini(contents_parts):
-    """Call Gemini REST API directly - avoids SDK version issues."""
-    import urllib.request
+def call_openrouter(model, messages):
+    """Call OpenRouter's OpenAI-compatible API."""
+    payload = json.dumps({
+        "model": model,
+        "max_tokens": 4096,
+        "messages": messages,
+    }).encode()
 
-    payload = json.dumps({"contents": [{"parts": contents_parts}]}).encode()
     req = urllib.request.Request(
-        API_URL,
+        "https://openrouter.ai/api/v1/chat/completions",
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {OPENROUTER_KEY}",
+            "HTTP-Referer": "https://recipesnap.onrender.com",
+            "X-Title": "RecipeSnap",
+        },
         method="POST",
     )
 
@@ -40,18 +50,19 @@ def call_gemini(contents_parts):
             data = json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         body = e.read().decode()
-        log.error(f"Gemini API HTTP {e.code}: {body}")
-        raise RuntimeError(f"Gemini API error {e.code}: {body[:200]}")
+        log.error(f"OpenRouter API HTTP {e.code}: {body[:500]}")
+        raise RuntimeError(f"API error {e.code}: {body[:200]}")
     except Exception as e:
-        log.error(f"Gemini request failed: {e}")
+        log.error(f"OpenRouter request failed: {e}")
         raise
 
-    # Extract text from response
     try:
-        text = data["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError) as e:
-        log.error(f"Unexpected Gemini response structure: {json.dumps(data)[:500]}")
-        raise RuntimeError(f"Could not parse Gemini response: {e}")
+        text = data["choices"][0]["message"]["content"]
+        model_used = data.get("model", "unknown")
+        log.info(f"Response from model: {model_used}")
+    except (KeyError, IndexError):
+        log.error(f"Unexpected response: {json.dumps(data)[:500]}")
+        raise RuntimeError("Could not parse API response")
 
     return text.strip()
 
@@ -59,6 +70,11 @@ def call_gemini(contents_parts):
 def parse_json_response(raw):
     """Clean and parse JSON from LLM output."""
     cleaned = raw.replace("```json", "").replace("```", "").strip()
+    # Sometimes models wrap JSON in extra text - find the array
+    start = cleaned.find("[")
+    end = cleaned.rfind("]") + 1
+    if start >= 0 and end > start:
+        cleaned = cleaned[start:end]
     return json.loads(cleaned)
 
 
@@ -71,11 +87,13 @@ def index():
 
 @app.route("/api/health")
 def health():
-    """Test that Gemini API is reachable and key is valid."""
-    if not GEMINI_KEY:
-        return jsonify({"status": "error", "message": "GEMINI_API_KEY not set"}), 500
+    """Test that API is reachable and key works."""
+    if not OPENROUTER_KEY:
+        return jsonify({"status": "error", "message": "OPENROUTER_API_KEY not set"}), 500
     try:
-        text = call_gemini([{"text": "Reply with just the word: OK"}])
+        text = call_openrouter(TEXT_MODEL, [
+            {"role": "user", "content": "Reply with just the word: OK"}
+        ])
         return jsonify({"status": "ok", "reply": text})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -88,41 +106,44 @@ def identify():
     if not files:
         return jsonify({"error": "No images uploaded"}), 400
 
-    parts = []
+    content = []
     for f in files:
         if f.content_type not in ALLOWED_TYPES:
-            log.warning(f"Skipping file with type: {f.content_type}")
+            log.warning(f"Skipping file: {f.content_type}")
             continue
         raw_bytes = f.read()
         b64 = base64.standard_b64encode(raw_bytes).decode()
-        parts.append({
-            "inline_data": {
-                "mime_type": f.content_type,
-                "data": b64,
+        content.append({
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:{f.content_type};base64,{b64}"
             }
         })
         log.info(f"Added image: {f.filename} ({f.content_type}, {len(raw_bytes)} bytes)")
 
-    if not parts:
+    if not content:
         return jsonify({"error": "No valid images found"}), 400
 
-    parts.append({
+    content.append({
+        "type": "text",
         "text": (
             "Identify every food ingredient visible in these images. "
             "Be specific (e.g. 'red bell pepper' not just 'pepper'). "
-            "Respond ONLY with a JSON array of strings, no markdown fences. "
+            "Respond ONLY with a JSON array of strings, no explanation, no markdown fences. "
             'Example: ["chicken breast", "garlic", "olive oil"]'
         )
     })
 
+    messages = [{"role": "user", "content": content}]
+
     try:
-        raw = call_gemini(parts)
-        log.info(f"Gemini identify response: {raw[:200]}")
+        raw = call_openrouter(VISION_MODEL, messages)
+        log.info(f"Identify response: {raw[:300]}")
         ingredients = parse_json_response(raw)
         return jsonify({"ingredients": ingredients})
     except json.JSONDecodeError as e:
-        log.error(f"JSON parse failed: {e}, raw: {raw[:300]}")
-        return jsonify({"error": f"Could not parse ingredient list: {e}"}), 500
+        log.error(f"JSON parse failed: {e}")
+        return jsonify({"error": f"Could not parse ingredient list"}), 500
     except Exception as e:
         log.error(f"Identify failed: {e}")
         return jsonify({"error": str(e)}), 500
@@ -147,7 +168,7 @@ Suggest 4-5 different recipes. Important rules:
 - Assume common pantry staples (salt, pepper, oil, butter, flour, sugar, basic spices) are available.
 - Mark which of the user's ingredients each recipe actually uses.
 
-Respond ONLY with a JSON array (no markdown fences):
+Respond ONLY with a JSON array (no markdown fences, no extra text):
 [
   {{
     "name": "Recipe Name",
@@ -163,23 +184,25 @@ Respond ONLY with a JSON array (no markdown fences):
   }}
 ]"""
 
+    messages = [{"role": "user", "content": prompt}]
+
     try:
-        raw = call_gemini([{"text": prompt}])
-        log.info(f"Gemini recipes response: {raw[:200]}")
+        raw = call_openrouter(TEXT_MODEL, messages)
+        log.info(f"Recipes response: {raw[:300]}")
         result = parse_json_response(raw)
         return jsonify({"recipes": result})
     except json.JSONDecodeError as e:
-        log.error(f"JSON parse failed: {e}, raw: {raw[:300]}")
-        return jsonify({"error": f"Could not parse recipes: {e}"}), 500
+        log.error(f"JSON parse failed: {e}")
+        return jsonify({"error": "Could not parse recipes"}), 500
     except Exception as e:
         log.error(f"Recipes failed: {e}")
         return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
-    if not GEMINI_KEY:
-        log.warning("GEMINI_API_KEY is not set! API calls will fail.")
+    if not OPENROUTER_KEY:
+        log.warning("OPENROUTER_API_KEY is not set! API calls will fail.")
     else:
-        log.info(f"Gemini API key loaded ({GEMINI_KEY[:8]}...)")
+        log.info(f"OpenRouter key loaded ({OPENROUTER_KEY[:8]}...)")
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port, debug=False)
