@@ -64,6 +64,10 @@ def call_openrouter(model, messages):
         log.error(f"Unexpected response: {json.dumps(data)[:500]}")
         raise RuntimeError("Could not parse API response")
 
+    if not text:
+        log.error(f"Empty response from {data.get('model', 'unknown')}")
+        raise RuntimeError("Model returned an empty response. Try again.")
+
     return text.strip()
 
 
@@ -76,6 +80,18 @@ def parse_json_response(raw):
     if start >= 0 and end > start:
         cleaned = cleaned[start:end]
     return json.loads(cleaned)
+
+
+def call_with_retry(model, messages, retries=2):
+    """Call OpenRouter with retries for flaky free models."""
+    last_err = None
+    for attempt in range(retries):
+        try:
+            return call_openrouter(model, messages)
+        except Exception as e:
+            last_err = e
+            log.warning(f"Attempt {attempt + 1} failed: {e}")
+    raise last_err
 
 
 # ── Routes ──
@@ -91,7 +107,7 @@ def health():
     if not OPENROUTER_KEY:
         return jsonify({"status": "error", "message": "OPENROUTER_API_KEY not set"}), 500
     try:
-        text = call_openrouter(TEXT_MODEL, [
+        text = call_with_retry(TEXT_MODEL, [
             {"role": "user", "content": "Reply with just the word: OK"}
         ])
         return jsonify({"status": "ok", "reply": text})
@@ -137,7 +153,7 @@ def identify():
     messages = [{"role": "user", "content": content}]
 
     try:
-        raw = call_openrouter(VISION_MODEL, messages)
+        raw = call_with_retry(VISION_MODEL, messages)
         log.info(f"Identify response: {raw[:300]}")
         ingredients = parse_json_response(raw)
         return jsonify({"ingredients": ingredients})
@@ -187,7 +203,7 @@ Respond ONLY with a JSON array (no markdown fences, no extra text):
     messages = [{"role": "user", "content": prompt}]
 
     try:
-        raw = call_openrouter(TEXT_MODEL, messages)
+        raw = call_with_retry(TEXT_MODEL, messages)
         log.info(f"Recipes response: {raw[:300]}")
         result = parse_json_response(raw)
         return jsonify({"recipes": result})
