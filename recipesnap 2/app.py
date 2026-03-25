@@ -19,7 +19,7 @@ app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024  # 32MB
 
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 # Free router auto-picks the best free model that supports vision
-VISION_MODEL = "qwen/qwen2.5-vl-72b-instruct:free"
+VISION_MODEL = "openrouter/free"
 TEXT_MODEL = "openrouter/free"
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
