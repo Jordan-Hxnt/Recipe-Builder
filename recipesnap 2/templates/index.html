@@ -3,269 +3,446 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#B8451C">
+  <meta name="theme-color" content="#D4551A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>RecipeSnap</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,800;1,9..144,400&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --hd: 'Fraunces', serif;
-      --bd: 'Outfit', sans-serif;
-      --bg: #FBF8F4;
+      --hd: 'Playfair Display', serif;
+      --bd: 'Plus Jakarta Sans', sans-serif;
+      --bg: #FFFBF7;
       --surface: #FFFFFF;
-      --text: #1F1A13;
-      --dim: #8A7D6B;
-      --line: #E6DDD0;
-      --pop: #B8451C;
-      --pop-soft: #FEF0EA;
-      --pop-dark: #943717;
-      --green: #2D7A4F;
-      --green-soft: #E8F5ED;
+      --elevated: #FFFFFF;
+      --text: #1C1710;
+      --text-secondary: #6B5D4D;
+      --dim: #9B8E7E;
+      --line: #EDE5DA;
+      --pop: #D4551A;
+      --pop-glow: rgba(212,85,26,0.15);
+      --pop-soft: #FFF3ED;
+      --pop-dark: #B14716;
+      --green: #1D8549;
+      --green-soft: #ECFAF2;
+      --amber: #C68A17;
+      --amber-soft: #FFF9ED;
       --radius: 16px;
-      --safe-b: env(safe-area-inset-bottom, 0px);
+      --radius-lg: 24px;
+      --shadow-sm: 0 1px 3px rgba(28,23,16,0.06);
+      --shadow-md: 0 4px 16px rgba(28,23,16,0.08);
+      --shadow-lg: 0 12px 40px rgba(28,23,16,0.12);
     }
     @media(prefers-color-scheme:dark){:root{
-      --bg:#161210;--surface:#211D18;--text:#EDE5D8;--dim:#978A78;
-      --line:#352F27;--pop:#E0733D;--pop-soft:#2A1E16;--pop-dark:#F09560;
-      --green:#5BC27E;--green-soft:#1A2E22;
+      --bg:#110E0B; --surface:#1C1814; --elevated:#241F1A;
+      --text:#F2E8D9; --text-secondary:#A99C8C; --dim:#7A6F62;
+      --line:#2E2822; --pop:#F07832; --pop-glow:rgba(240,120,50,0.12);
+      --pop-soft:#251A12; --pop-dark:#F59A5E;
+      --green:#4DD07A; --green-soft:#142118;
+      --amber:#F0B849; --amber-soft:#221C10;
+      --shadow-sm:0 1px 3px rgba(0,0,0,0.2);
+      --shadow-md:0 4px 16px rgba(0,0,0,0.25);
+      --shadow-lg:0 12px 40px rgba(0,0,0,0.35);
     }}
 
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    html{-webkit-text-size-adjust:100%;}
+    html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
     body{
-      font-family:var(--bd);background:var(--bg);color:var(--text);
-      min-height:100dvh;display:flex;flex-direction:column;
-      -webkit-font-smoothing:antialiased;
+      font-family:var(--bd); background:var(--bg); color:var(--text);
+      min-height:100dvh; display:flex; flex-direction:column;
+      -webkit-font-smoothing:antialiased; overflow-x:hidden;
     }
 
     /* ── Header ── */
     header{
-      display:flex;justify-content:space-between;align-items:center;
-      padding:14px 20px;background:var(--surface);
+      display:flex; justify-content:space-between; align-items:center;
+      padding:12px 20px; background:var(--surface);
       border-bottom:1px solid var(--line);
-      position:sticky;top:0;z-index:10;
+      position:sticky; top:0; z-index:20;
+      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
     }
     .brand{display:flex;align-items:center;gap:10px;}
-    .brand-icon{
-      width:40px;height:40px;background:var(--pop);border-radius:11px;
-      display:grid;place-items:center;font-size:20px;
+    .brand-mark{
+      width:36px;height:36px;background:var(--pop);border-radius:10px;
+      display:grid;place-items:center;font-size:18px;
+      box-shadow:0 2px 8px var(--pop-glow);
     }
-    .brand h1{font-family:var(--hd);font-size:20px;font-weight:800;}
-    .brand small{font-size:11px;color:var(--dim);display:block;margin-top:-2px;}
+    .brand h1{font-family:var(--hd);font-size:18px;font-weight:700;}
     .btn-reset{
       font-family:var(--bd);font-size:12px;font-weight:600;
       padding:7px 14px;border-radius:8px;cursor:pointer;
       border:1px solid var(--line);background:var(--surface);color:var(--dim);
+      transition:all .15s;
     }
+    .btn-reset:hover{border-color:var(--pop);color:var(--pop);}
 
-    /* ── Main ── */
-    main{flex:1;width:100%;max-width:540px;margin:0 auto;padding:20px 16px;}
+    /* ── Stepper ── */
+    .stepper{
+      display:flex;justify-content:center;gap:0;
+      padding:12px 20px 0;
+    }
+    .step-dot{
+      display:flex;align-items:center;gap:0;
+    }
+    .step-dot .dot{
+      width:28px;height:28px;border-radius:50%;
+      display:grid;place-items:center;
+      font-size:12px;font-weight:700;
+      border:2px solid var(--line);color:var(--dim);
+      background:var(--surface);transition:all .3s;
+    }
+    .step-dot .dot.active{
+      border-color:var(--pop);color:#fff;background:var(--pop);
+      box-shadow:0 0 0 4px var(--pop-glow);
+    }
+    .step-dot .dot.done{
+      border-color:var(--green);color:#fff;background:var(--green);
+    }
+    .step-dot .line{
+      width:48px;height:2px;background:var(--line);transition:background .3s;
+    }
+    .step-dot .line.active{background:var(--pop);}
+    .step-dot .line.done{background:var(--green);}
+    .step-labels{
+      display:flex;justify-content:center;gap:42px;
+      padding:6px 0 0;
+    }
+    .step-labels span{font-size:10px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;width:50px;text-align:center;}
+    .step-labels span.active{color:var(--pop);}
 
-    /* ── Upload ── */
+    /* ── Container ── */
+    main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:20px 16px 32px;}
+
+    /* ── Hero ── */
+    .hero{
+      text-align:center;padding:32px 12px 28px;
+      position:relative;
+      animation:fadeUp .6s ease;
+    }
+    .hero-emojis{
+      font-size:40px;letter-spacing:8px;
+      margin-bottom:16px;
+      animation:float 3s ease-in-out infinite;
+    }
+    .hero h2{
+      font-family:var(--hd);font-size:30px;font-weight:900;
+      line-height:1.2;margin-bottom:8px;
+      background:linear-gradient(135deg, var(--text) 0%, var(--pop) 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .hero p{font-size:15px;color:var(--text-secondary);line-height:1.5;max-width:320px;margin:0 auto;}
+
+    /* ── Upload zone ── */
     .upload-zone{
-      border:2px dashed var(--line);border-radius:20px;
-      padding:44px 20px;text-align:center;cursor:pointer;
-      background:var(--surface);transition:all .2s;
+      border:2px dashed var(--line);border-radius:var(--radius-lg);
+      padding:36px 20px;text-align:center;cursor:pointer;
+      background:var(--surface);transition:all .25s;
+      margin-top:20px;position:relative;overflow:hidden;
     }
-    .upload-zone.drag{border-color:var(--pop);background:var(--pop-soft);}
-    .upload-zone .icon{font-size:44px;margin-bottom:6px;}
-    .upload-zone h2{font-family:var(--hd);font-size:17px;margin-bottom:2px;}
+    .upload-zone::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(circle at 50% 0%, var(--pop-glow) 0%, transparent 70%);
+      opacity:0;transition:opacity .3s;pointer-events:none;
+    }
+    .upload-zone:hover::before,.upload-zone.drag::before{opacity:1;}
+    .upload-zone.drag{border-color:var(--pop);transform:scale(1.01);}
+    .upload-zone .uz-icon{font-size:40px;margin-bottom:4px;}
+    .upload-zone h3{font-family:var(--hd);font-size:16px;margin-bottom:2px;}
     .upload-zone p{font-size:13px;color:var(--dim);}
+    .upload-hint{
+      display:flex;justify-content:center;gap:16px;margin-top:12px;
+      font-size:11px;color:var(--dim);
+    }
+    .upload-hint span{display:flex;align-items:center;gap:4px;}
 
-    .thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
-    .thumb{position:relative;animation:up .3s ease both;}
-    .thumb img{width:76px;height:76px;object-fit:cover;border-radius:10px;border:2px solid var(--line);display:block;}
+    /* ── Thumbs ── */
+    .thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;justify-content:center;}
+    .thumb{position:relative;animation:pop .3s ease both;}
+    .thumb img{
+      width:80px;height:80px;object-fit:cover;border-radius:12px;
+      border:2px solid var(--line);display:block;
+      box-shadow:var(--shadow-sm);
+    }
     .thumb-x{
       position:absolute;top:-5px;right:-5px;width:20px;height:20px;
-      border-radius:50%;border:none;background:var(--pop);color:#fff;
+      border-radius:50%;border:2px solid var(--surface);
+      background:var(--pop);color:#fff;
       font-size:10px;cursor:pointer;display:grid;place-items:center;
+      transition:transform .15s;
     }
+    .thumb-x:hover{transform:scale(1.15);}
     .thumb-add{
-      width:76px;height:76px;border-radius:10px;border:2px dashed var(--line);
+      width:80px;height:80px;border-radius:12px;border:2px dashed var(--line);
       display:grid;place-items:center;font-size:24px;color:var(--dim);
-      cursor:pointer;background:var(--surface);
+      cursor:pointer;background:var(--surface);transition:all .2s;
     }
+    .thumb-add:hover{border-color:var(--pop);color:var(--pop);}
 
     /* ── Buttons ── */
     .btn{
       font-family:var(--bd);font-weight:700;border:none;
-      border-radius:var(--radius);cursor:pointer;transition:all .15s;
-      width:100%;display:block;text-align:center;
+      border-radius:var(--radius);cursor:pointer;transition:all .2s;
+      width:100%;display:block;text-align:center;position:relative;overflow:hidden;
     }
     .btn:active{transform:scale(.97);}
-    .btn-primary{padding:15px;font-size:15px;color:#fff;background:var(--pop);margin-top:16px;}
-    .btn-primary:disabled{opacity:.45;cursor:default;}
-    .btn-secondary{
-      padding:13px;font-size:14px;color:var(--text);
-      background:var(--surface);border:1px solid var(--line);margin-top:16px;
+    .btn-primary{
+      padding:16px;font-size:15px;color:#fff;background:var(--pop);
+      margin-top:16px;box-shadow:0 4px 16px var(--pop-glow);
     }
+    .btn-primary:hover{background:var(--pop-dark);box-shadow:0 6px 24px var(--pop-glow);}
+    .btn-primary:disabled{opacity:.4;cursor:default;box-shadow:none;}
+    .btn-secondary{
+      padding:14px;font-size:14px;color:var(--text);
+      background:var(--surface);border:1px solid var(--line);margin-top:14px;
+    }
+    .btn-secondary:hover{border-color:var(--pop);color:var(--pop);}
 
     /* ── Chips ── */
     .chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
     .chip{
       font-family:var(--bd);font-size:13px;font-weight:500;
-      padding:7px 13px;border-radius:20px;
+      padding:8px 14px;border-radius:24px;
       border:1px solid var(--line);background:var(--surface);
       color:var(--text);cursor:pointer;transition:all .15s;
-      animation:up .25s ease both;
+      animation:pop .25s ease both;box-shadow:var(--shadow-sm);
     }
-    .chip:hover{border-color:var(--pop);}
-    .chip .x{margin-left:5px;opacity:.4;font-size:11px;}
+    .chip:hover{border-color:var(--pop);box-shadow:var(--shadow-md);}
+    .chip .x{margin-left:5px;opacity:.35;font-size:11px;}
 
     /* ── Input ── */
     .input{
       font-family:var(--bd);font-size:14px;
-      padding:11px 14px;width:100%;border-radius:10px;
+      padding:12px 16px;width:100%;border-radius:12px;
       border:1px solid var(--line);background:var(--surface);color:var(--text);
+      transition:border-color .2s;
     }
-    .input:focus{outline:2px solid var(--pop);outline-offset:-1px;}
+    .input:focus{outline:none;border-color:var(--pop);box-shadow:0 0 0 3px var(--pop-glow);}
     .row{display:flex;gap:8px;margin-bottom:12px;}
-    .row .btn{width:auto;flex-shrink:0;padding:11px 18px;margin:0;}
+    .row .btn{width:auto;flex-shrink:0;padding:12px 20px;margin:0;}
 
     /* ── Cards ── */
     .card{
-      background:var(--surface);border-radius:var(--radius);
+      background:var(--surface);border-radius:var(--radius-lg);
       border:1px solid var(--line);overflow:hidden;
-      transition:box-shadow .2s,transform .2s;
-      animation:up .4s ease both;cursor:pointer;
+      transition:all .25s ease;cursor:pointer;
+      animation:fadeUp .4s ease both;
+      box-shadow:var(--shadow-sm);
     }
-    .card:hover{box-shadow:0 6px 24px rgba(0,0,0,.08);transform:translateY(-1px);}
-    .card-head{padding:20px;}
+    .card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+    .card-head{padding:22px 20px 18px;}
     .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
-    .card .emoji{font-size:28px;}
-    .card h3{font-family:var(--hd);font-size:18px;margin:6px 0 3px;}
-    .card .desc{color:var(--dim);font-size:13px;line-height:1.45;}
+    .card .emoji{font-size:32px;display:block;margin-bottom:4px;}
+    .card h3{font-family:var(--hd);font-size:19px;font-weight:700;margin-bottom:4px;line-height:1.25;}
+    .card .desc{color:var(--text-secondary);font-size:13px;line-height:1.5;}
     .card .vibe{
-      font-size:11px;font-weight:600;color:var(--green);
-      background:var(--green-soft);padding:3px 9px;border-radius:12px;
-      display:inline-block;margin-top:6px;
+      font-size:11px;font-weight:600;color:var(--amber);
+      background:var(--amber-soft);padding:3px 10px;border-radius:12px;
+      display:inline-block;margin-top:8px;
     }
-    .tags{display:flex;gap:6px;flex-shrink:0;}
+    .tags{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
     .tag{
-      font-size:10px;font-weight:600;padding:4px 9px;border-radius:14px;
+      font-size:10px;font-weight:700;padding:4px 10px;border-radius:14px;
       background:var(--pop-soft);color:var(--pop);white-space:nowrap;
+      text-transform:uppercase;letter-spacing:.3px;
     }
 
     .card-body{
-      padding:0 20px 20px;border-top:1px solid var(--line);
-      margin-top:12px;padding-top:14px;
+      padding:0 20px 22px;border-top:1px solid var(--line);
+      margin-top:8px;padding-top:16px;
+      max-height:0;overflow:hidden;opacity:0;
+      transition:max-height .4s ease, opacity .3s ease, padding .3s ease;
     }
-    .card-body[hidden]{display:none;}
+    .card-body.open{
+      max-height:2000px;opacity:1;
+      padding-top:16px;padding-bottom:22px;
+    }
     .sec-title{
       font-family:var(--hd);font-size:12px;font-weight:700;
-      text-transform:uppercase;letter-spacing:1px;color:var(--pop);
+      text-transform:uppercase;letter-spacing:1.2px;color:var(--pop);
       margin:0 0 8px;
     }
     .uses-list{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;}
     .uses-chip{
-      font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;
+      font-size:11px;font-weight:600;padding:4px 10px;border-radius:10px;
       background:var(--green-soft);color:var(--green);
     }
     .extra-chip{
-      font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;
+      font-size:11px;font-weight:600;padding:4px 10px;border-radius:10px;
       background:var(--pop-soft);color:var(--pop);
     }
-    .ing-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;margin-bottom:16px;}
-    .ing-grid span{font-size:13px;line-height:1.6;}
-    .step{display:flex;gap:12px;margin-bottom:10px;}
+    .ing-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:18px;}
+    .ing-grid span{font-size:13px;line-height:1.6;color:var(--text-secondary);}
+    .step{display:flex;gap:12px;margin-bottom:12px;}
     .step-n{
-      font-family:var(--hd);font-size:16px;font-weight:800;
-      color:var(--pop);flex-shrink:0;width:22px;text-align:center;line-height:22px;
+      font-family:var(--hd);font-size:16px;font-weight:900;
+      color:var(--pop);flex-shrink:0;width:24px;height:24px;
+      text-align:center;line-height:24px;
+      background:var(--pop-soft);border-radius:6px;
     }
-    .step-t{font-size:13px;line-height:1.55;}
+    .step-t{font-size:13px;line-height:1.6;color:var(--text-secondary);}
     .card-foot{
-      text-align:center;padding:9px;font-size:11px;color:var(--dim);
-      border-top:1px solid var(--line);background:var(--bg);
+      text-align:center;padding:10px;font-size:11px;font-weight:600;
+      color:var(--dim);border-top:1px solid var(--line);background:var(--bg);
+      transition:color .2s;
     }
+    .card:hover .card-foot{color:var(--pop);}
 
     /* ── Loading ── */
-    .loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:36px 0;}
-    .spin{
-      width:22px;height:22px;border:3px solid var(--line);
-      border-top-color:var(--pop);border-radius:50%;
-      animation:rot .7s linear infinite;
+    .loader-wrap{
+      display:flex;flex-direction:column;align-items:center;
+      justify-content:center;padding:48px 20px;gap:20px;
+      animation:fadeUp .3s ease;
     }
-    .loading span{font-family:var(--hd);font-size:15px;}
+    .loader-ring{
+      width:48px;height:48px;position:relative;
+    }
+    .loader-ring::before,.loader-ring::after{
+      content:'';position:absolute;inset:0;
+      border-radius:50%;border:3px solid transparent;
+    }
+    .loader-ring::before{border-top-color:var(--pop);animation:rot .8s linear infinite;}
+    .loader-ring::after{border-bottom-color:var(--pop);opacity:.3;animation:rot 1.2s linear infinite reverse;}
+    .loader-emoji{
+      font-size:20px;position:absolute;
+      top:50%;left:50%;transform:translate(-50%,-50%);
+      animation:pulse 1.5s ease-in-out infinite;
+    }
+    .loader-text{font-family:var(--hd);font-size:16px;text-align:center;}
+    .loader-tip{font-size:12px;color:var(--dim);text-align:center;max-width:260px;line-height:1.4;}
 
-    .phase-title{font-family:var(--hd);font-size:24px;margin-bottom:10px;}
-    .phase-sub{color:var(--dim);font-size:13px;margin:-6px 0 14px;}
+    .phase-title{font-family:var(--hd);font-size:26px;font-weight:900;margin-bottom:6px;}
+    .phase-sub{color:var(--text-secondary);font-size:13px;margin-bottom:16px;line-height:1.4;}
 
-    footer{text-align:center;padding:14px;font-size:11px;color:var(--dim);border-top:1px solid var(--line);}
+    footer{
+      text-align:center;padding:16px;font-size:11px;
+      color:var(--dim);border-top:1px solid var(--line);
+    }
 
     .gap{display:flex;flex-direction:column;gap:14px;}
-    .error{color:#c53;font-size:13px;text-align:center;margin-top:14px;}
+    .error{
+      color:var(--pop);font-size:13px;text-align:center;
+      margin-top:14px;padding:12px;border-radius:12px;
+      background:var(--pop-soft);border:1px solid var(--pop);
+    }
     [hidden]{display:none!important;}
 
-    @keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
     @keyframes rot{to{transform:rotate(360deg)}}
-    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.15)}}
   </style>
 </head>
 <body>
 
 <header>
   <div class="brand">
-    <div class="brand-icon">🥘</div>
-    <div><h1>RecipeSnap</h1><small>snap ingredients, get recipes</small></div>
+    <div class="brand-mark">🥘</div>
+    <h1>RecipeSnap</h1>
   </div>
   <button class="btn-reset" id="resetBtn" hidden>Start over</button>
 </header>
 
+<!-- Stepper -->
+<div style="background:var(--surface);border-bottom:1px solid var(--line);padding-bottom:10px;">
+  <div class="stepper">
+    <div class="step-dot">
+      <div class="dot active" id="dot1">1</div>
+      <div class="line" id="line1"></div>
+    </div>
+    <div class="step-dot">
+      <div class="dot" id="dot2">2</div>
+      <div class="line" id="line2"></div>
+    </div>
+    <div class="step-dot">
+      <div class="dot" id="dot3">3</div>
+    </div>
+  </div>
+  <div class="step-labels">
+    <span class="active" id="lbl1">Snap</span>
+    <span id="lbl2">Review</span>
+    <span id="lbl3">Cook</span>
+  </div>
+</div>
+
 <main>
-  <!-- Upload -->
+  <!-- PHASE: Upload -->
   <section id="phaseUpload">
+    <div class="hero">
+      <div class="hero-emojis">🥕🧄🍗🫑🍋</div>
+      <h2>What's in your kitchen?</h2>
+      <p>Take a photo of your ingredients and we'll suggest recipes you can actually make right now.</p>
+    </div>
+
     <div class="upload-zone" id="dropzone">
-      <div class="icon">📸</div>
-      <h2>Drop ingredient photos here</h2>
-      <p>or tap to snap / upload</p>
+      <div class="uz-icon">📸</div>
+      <h3>Snap or upload photos</h3>
+      <p>Your fridge, counter, pantry... anything goes</p>
+      <div class="upload-hint">
+        <span>📱 Camera</span>
+        <span>🖼️ Gallery</span>
+        <span>📂 Files</span>
+      </div>
     </div>
     <input type="file" id="fileInput" accept="image/*" multiple capture="environment" hidden>
+
     <div class="thumbs" id="thumbs"></div>
-    <button class="btn btn-primary" id="scanBtn" hidden>Identify my ingredients</button>
+    <button class="btn btn-primary" id="scanBtn" hidden>
+      ✨ Identify my ingredients
+    </button>
   </section>
 
-  <!-- Scanning -->
+  <!-- PHASE: Scanning -->
   <section id="phaseScanning" hidden>
-    <div class="loading"><div class="spin"></div><span>Scanning your photos<span id="d1"></span></span></div>
+    <div class="loader-wrap">
+      <div class="loader-ring"><span class="loader-emoji" id="scanEmoji">🔍</span></div>
+      <div class="loader-text">Scanning your ingredients<span id="d1"></span></div>
+      <div class="loader-tip" id="scanTip"></div>
+    </div>
   </section>
 
-  <!-- Ingredients -->
+  <!-- PHASE: Ingredients -->
   <section id="phaseIngredients" hidden>
     <h2 class="phase-title" id="ingCount"></h2>
-    <p class="phase-sub">Tap to remove, type to add</p>
+    <p class="phase-sub">Tap to remove, type to add. Don't forget pantry items that aren't in the photo!</p>
     <div class="chips" id="chips"></div>
     <div class="row">
       <input class="input" id="addInput" placeholder="Add an ingredient...">
       <button class="btn btn-primary" id="addBtn">Add</button>
     </div>
     <input class="input" id="dietInput" placeholder="Dietary preferences? (vegetarian, low-carb, halal...)" style="margin-bottom:16px">
-    <button class="btn btn-primary" id="genBtn" style="margin:0">What can I make?</button>
+    <button class="btn btn-primary" id="genBtn" style="margin:0">🍳 What can I make?</button>
   </section>
 
-  <!-- Cooking -->
+  <!-- PHASE: Cooking -->
   <section id="phaseCooking" hidden>
-    <div class="loading"><div class="spin"></div><span>Cooking up ideas<span id="d2"></span></span></div>
+    <div class="loader-wrap">
+      <div class="loader-ring"><span class="loader-emoji" id="cookEmoji">👨‍🍳</span></div>
+      <div class="loader-text">Cooking up ideas<span id="d2"></span></div>
+      <div class="loader-tip" id="cookTip"></div>
+    </div>
   </section>
 
-  <!-- Recipes -->
+  <!-- PHASE: Recipes -->
   <section id="phaseRecipes" hidden>
-    <h2 class="phase-title">Here's what you can make</h2>
+    <h2 class="phase-title">Here's what you can make 🎉</h2>
     <div class="gap" id="recipeList"></div>
-    <button class="btn btn-secondary" id="backBtn">&#8592; Back to ingredients</button>
+    <button class="btn btn-secondary" id="backBtn">← Back to ingredients</button>
   </section>
 
   <p class="error" id="errMsg" hidden></p>
 </main>
 
-<footer>Powered by OpenRouter &middot; Your ingredients, your kitchen</footer>
+<footer>Built with ♨️ &middot; Powered by OpenRouter</footer>
 
 <script>
 // ── State ──
-let files = [];      // File objects
-let thumbUrls = [];  // data URLs
+let files = [];
+let thumbUrls = [];
 let ingredients = [];
+let currentStep = 1;
 
 const $ = s => document.querySelector(s);
 const show = el => el.removeAttribute("hidden");
@@ -277,24 +454,110 @@ const phases = {
   recipes: $("#phaseRecipes"),
 };
 
+// ── Stepper ──
+function setStep(n) {
+  currentStep = n;
+  [1,2,3].forEach(i => {
+    const dot = $(`#dot${i}`), lbl = $(`#lbl${i}`);
+    dot.className = "dot" + (i < n ? " done" : i === n ? " active" : "");
+    lbl.className = i === n ? "active" : "";
+    if (i < 3) {
+      const line = $(`#line${i}`);
+      line.className = "line" + (i < n ? " done" : i === n ? " active" : "");
+    }
+  });
+}
+
 function setPhase(n) {
   Object.values(phases).forEach(hide);
   show(phases[n]);
   n === "upload" ? hide($("#resetBtn")) : show($("#resetBtn"));
   hide($("#errMsg"));
+  if (n === "upload" || n === "scanning") setStep(1);
+  else if (n === "ingredients") setStep(2);
+  else if (n === "cooking" || n === "recipes") setStep(3);
 }
 
 function err(msg) { $("#errMsg").textContent = msg; show($("#errMsg")); }
 
-function fetchWithTimeout(url, opts, ms = 60000) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), ms);
-  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+// ── Fetch with timeout ──
+function fetchT(url, opts, ms=90000) {
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), ms);
+  return fetch(url, {...opts, signal:c.signal}).finally(() => clearTimeout(t));
 }
 
+// ── Animated dots ──
 function dots(el) {
   let c = 0;
-  return setInterval(() => { c = (c+1)%4; el.textContent = ".".repeat(c); }, 350);
+  return setInterval(() => { c=(c+1)%4; el.textContent=".".repeat(c); }, 350);
+}
+
+// ── Loading tips ──
+const scanTips = [
+  "We can identify fresh produce, meats, dairy, grains, and more",
+  "Multiple photos work great - snap the fridge AND the counter",
+  "Pro tip: clearer photos = better ingredient detection",
+  "Don't worry about pantry staples - we assume you have the basics",
+];
+const cookTips = [
+  "Each recipe uses a different subset of your ingredients",
+  "We'll suggest a mix of quick, involved, and creative options",
+  "Recipes include step-by-step instructions",
+  "Extra ingredients needed (beyond pantry staples) are flagged",
+];
+
+function rotateTips(el, tips) {
+  let i = 0;
+  el.textContent = tips[0];
+  el.style.transition = "opacity .3s";
+  return setInterval(() => {
+    el.style.opacity = 0;
+    setTimeout(() => {
+      i = (i+1) % tips.length;
+      el.textContent = tips[i];
+      el.style.opacity = 1;
+    }, 300);
+  }, 3500);
+}
+
+const scanEmojis = ["🔍","🥕","🧄","🍗","🫑"];
+const cookEmojis = ["👨‍🍳","🍳","🔥","✨","🍽️"];
+
+function rotateEmoji(el, emojis) {
+  let i = 0;
+  return setInterval(() => { i=(i+1)%emojis.length; el.textContent=emojis[i]; }, 800);
+}
+
+// ── Client-side image compression ──
+function compressImage(file, maxDim=1200, quality=0.7) {
+  return new Promise((resolve) => {
+    // If file is already small, skip compression
+    if (file.size < 200000) {
+      resolve(file);
+      return;
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim) {
+        const ratio = Math.min(maxDim/w, maxDim/h);
+        w = Math.round(w*ratio);
+        h = Math.round(h*ratio);
+      }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => {
+        URL.revokeObjectURL(url);
+        resolve(blob ? new File([blob], file.name, {type:"image/jpeg"}) : file);
+      }, "image/jpeg", quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
 }
 
 // ── Images ──
@@ -308,8 +571,9 @@ function readThumb(file) {
 
 async function addFiles(list) {
   for (const f of Array.from(list)) {
-    files.push(f);
-    thumbUrls.push(await readThumb(f));
+    const compressed = await compressImage(f);
+    files.push(compressed);
+    thumbUrls.push(await readThumb(compressed));
   }
   renderThumbs();
 }
@@ -317,8 +581,7 @@ async function addFiles(list) {
 function removeFile(i) { files.splice(i,1); thumbUrls.splice(i,1); renderThumbs(); }
 
 function renderThumbs() {
-  const el = $("#thumbs");
-  el.innerHTML = "";
+  const el = $("#thumbs"); el.innerHTML = "";
   thumbUrls.forEach((src, i) => {
     const d = document.createElement("div");
     d.className = "thumb"; d.style.animationDelay = `${i*60}ms`;
@@ -345,34 +608,37 @@ dz.onclick = () => $("#fileInput").click();
 dz.ondragover = e => { e.preventDefault(); dz.classList.add("drag"); };
 dz.ondragleave = e => { e.preventDefault(); dz.classList.remove("drag"); };
 dz.ondrop = e => { e.preventDefault(); dz.classList.remove("drag"); addFiles(e.dataTransfer.files); };
-$("#fileInput").onchange = e => addFiles(e.target.files);
+$("#fileInput").onchange = e => { addFiles(e.target.files); };
 
 // ── Scan ──
 $("#scanBtn").onclick = async () => {
   if (!files.length) return;
   setPhase("scanning");
   const dt = dots($("#d1"));
+  const tipTimer = rotateTips($("#scanTip"), scanTips);
+  const emojiTimer = rotateEmoji($("#scanEmoji"), scanEmojis);
   try {
     const fd = new FormData();
     files.forEach(f => fd.append("images", f));
-    const res = await fetchWithTimeout("/api/identify", { method: "POST", body: fd }, 90000);
+    const res = await fetchT("/api/identify", { method:"POST", body:fd });
     const data = await res.json();
-    clearInterval(dt);
+    clearInterval(dt); clearInterval(tipTimer); clearInterval(emojiTimer);
     if (data.error) throw new Error(data.error);
     ingredients = data.ingredients;
     renderChips();
     setPhase("ingredients");
   } catch(e) {
-    clearInterval(dt);
+    clearInterval(dt); clearInterval(tipTimer); clearInterval(emojiTimer);
     console.error("Scan error:", e);
     setPhase("upload");
-    err(e.name === "AbortError" ? "Request timed out. Server may be waking up - try again." : (e.message || "Could not scan. Try a clearer photo."));
+    err(e.name==="AbortError" ? "Request timed out. The server may be waking up, try again in 30s." : (e.message || "Could not scan. Try a clearer photo."));
   }
 };
 
 // ── Ingredients ──
 function renderChips() {
-  $("#ingCount").textContent = `Found ${ingredients.length} ingredients`;
+  const count = ingredients.length;
+  $("#ingCount").textContent = count === 1 ? "Found 1 ingredient" : `Found ${count} ingredients`;
   const el = $("#chips"); el.innerHTML = "";
   ingredients.forEach((ing, i) => {
     const c = document.createElement("button");
@@ -389,29 +655,31 @@ function addIng(v) {
 }
 
 $("#addBtn").onclick = () => { addIng($("#addInput").value); $("#addInput").value = ""; };
-$("#addInput").onkeydown = e => { if (e.key === "Enter") { addIng($("#addInput").value); $("#addInput").value = ""; }};
+$("#addInput").onkeydown = e => { if (e.key==="Enter") { addIng($("#addInput").value); $("#addInput").value=""; }};
 
 // ── Generate ──
 $("#genBtn").onclick = async () => {
   if (!ingredients.length) return;
   setPhase("cooking");
   const dt = dots($("#d2"));
+  const tipTimer = rotateTips($("#cookTip"), cookTips);
+  const emojiTimer = rotateEmoji($("#cookEmoji"), cookEmojis);
   try {
-    const res = await fetchWithTimeout("/api/recipes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ingredients, dietary: $("#dietInput").value }),
-    }, 90000);
+    const res = await fetchT("/api/recipes", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ ingredients, dietary:$("#dietInput").value }),
+    });
     const data = await res.json();
-    clearInterval(dt);
+    clearInterval(dt); clearInterval(tipTimer); clearInterval(emojiTimer);
     if (data.error) throw new Error(data.error);
     renderRecipes(data.recipes);
     setPhase("recipes");
   } catch(e) {
-    clearInterval(dt);
+    clearInterval(dt); clearInterval(tipTimer); clearInterval(emojiTimer);
     console.error("Recipe error:", e);
     setPhase("ingredients");
-    err(e.name === "AbortError" ? "Request timed out. Server may be waking up - try again." : (e.message || "Recipe generation failed. Try again."));
+    err(e.name==="AbortError" ? "Request timed out. Try again." : (e.message || "Recipe generation failed."));
   }
 };
 
@@ -422,7 +690,7 @@ function renderRecipes(recipes) {
     const card = document.createElement("div");
     card.className = "card"; card.style.animationDelay = `${i*100}ms`;
 
-    const usesHtml = (r.uses||[]).map(u => `<span class="uses-chip">${u}</span>`).join("");
+    const usesHtml = (r.uses||[]).map(u => `<span class="uses-chip">✓ ${u}</span>`).join("");
     const extraHtml = (r.extra_needed||[]).filter(Boolean).map(u => `<span class="extra-chip">+ ${u}</span>`).join("");
     const ingHtml = (r.ingredients||[]).map(x => `<span>• ${x}</span>`).join("");
     const stepsHtml = (r.steps||[]).map((s,j) => `<div class="step"><span class="step-n">${j+1}</span><p class="step-t">${s}</p></div>`).join("");
@@ -434,14 +702,14 @@ function renderRecipes(recipes) {
             <span class="emoji">${r.emoji||"🍽"}</span>
             <h3>${r.name}</h3>
             <p class="desc">${r.description||""}</p>
-            ${r.vibe ? `<span class="vibe">${r.vibe}</span>` : ""}
+            ${r.vibe ? `<span class="vibe">💡 ${r.vibe}</span>` : ""}
           </div>
           <div class="tags">
-            <span class="tag">${r.time||""}</span>
+            <span class="tag">⏱ ${r.time||""}</span>
             <span class="tag">${r.difficulty||""}</span>
           </div>
         </div>
-        <div class="card-body" hidden>
+        <div class="card-body" id="body-${i}">
           <h4 class="sec-title">Uses your ingredients</h4>
           <div class="uses-list">${usesHtml}${extraHtml}</div>
           <h4 class="sec-title">Full ingredients</h4>
@@ -450,12 +718,14 @@ function renderRecipes(recipes) {
           ${stepsHtml}
         </div>
       </div>
-      <div class="card-foot">tap to expand</div>`;
+      <div class="card-foot" id="foot-${i}">tap to expand</div>`;
 
     card.onclick = () => {
       const b = card.querySelector(".card-body");
       const f = card.querySelector(".card-foot");
-      b.hidden ? (show(b), f.textContent="tap to collapse") : (hide(b), f.textContent="tap to expand");
+      const isOpen = b.classList.contains("open");
+      b.classList.toggle("open");
+      f.textContent = isOpen ? "tap to expand" : "tap to collapse";
     };
     el.appendChild(card);
   });
