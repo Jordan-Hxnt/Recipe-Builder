@@ -481,7 +481,7 @@ function setPhase(n) {
 function err(msg) { $("#errMsg").textContent = msg; show($("#errMsg")); }
 
 // ── Fetch with timeout ──
-function fetchT(url, opts, ms=90000) {
+function fetchT(url, opts, ms=150000) {
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), ms);
   return fetch(url, {...opts, signal:c.signal}).finally(() => clearTimeout(t));
@@ -740,6 +740,9 @@ $("#resetBtn").onclick = () => {
 };
 
 setPhase("upload");
+
+// Wake server on page load so it's warm by the time user acts
+fetch("/api/health").catch(() => {});
 </script>
 </body>
 </html>
