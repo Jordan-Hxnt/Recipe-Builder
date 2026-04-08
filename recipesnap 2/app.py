@@ -86,11 +86,43 @@ def call_with_retry(model, messages, retries=2):
 
 
 def parse_json(raw):
-    c = raw.replace("```json", "").replace("```", "").strip()
+    """Aggressively clean and parse JSON from LLM output."""
+    c = raw.strip()
+    # Strip markdown fences
+    c = c.replace("```json", "").replace("```", "").strip()
+    # Find the JSON array
     s, e = c.find("["), c.rfind("]") + 1
     if s >= 0 and e > s:
         c = c[s:e]
-    return json.loads(c)
+    # Fix trailing commas before ] or }
+    import re
+    c = re.sub(r',\s*([}\]])', r'\1', c)
+    # Try parsing
+    try:
+        return json.loads(c)
+    except json.JSONDecodeError:
+        pass
+    # Try fixing single quotes
+    try:
+        return json.loads(c.replace("'", '"'))
+    except json.JSONDecodeError:
+        pass
+    raise json.JSONDecodeError("Could not parse", c, 0)
+
+
+def repair_json(broken, model):
+    """Ask the model to fix its own broken JSON."""
+    log.info("Attempting JSON repair via model")
+    prompt = (
+        "The following text was supposed to be a valid JSON array but has errors. "
+        "Fix it and return ONLY the corrected JSON array, nothing else:\n\n" + broken[:3000]
+    )
+    try:
+        fixed = call_openrouter(model, [{"role": "user", "content": prompt}])
+        return parse_json(fixed)
+    except Exception as e:
+        log.error(f"JSON repair failed: {e}")
+        raise
 
 
 @app.route("/")
@@ -132,7 +164,10 @@ def identify():
 
     try:
         raw = call_with_retry(VISION_MODEL, [{"role": "user", "content": content}])
-        return jsonify({"ingredients": parse_json(raw)})
+        try:
+            return jsonify({"ingredients": parse_json(raw)})
+        except json.JSONDecodeError:
+            return jsonify({"ingredients": repair_json(raw, TEXT_MODEL)})
     except json.JSONDecodeError:
         return jsonify({"error": "Could not parse ingredients"}), 500
     except Exception as e:
@@ -155,7 +190,10 @@ JSON array only, no markdown:
 
     try:
         raw = call_with_retry(TEXT_MODEL, [{"role": "user", "content": prompt}])
-        return jsonify({"recipes": parse_json(raw)})
+        try:
+            return jsonify({"recipes": parse_json(raw)})
+        except json.JSONDecodeError:
+            return jsonify({"recipes": repair_json(raw, TEXT_MODEL)})
     except json.JSONDecodeError:
         return jsonify({"error": "Could not parse recipes"}), 500
     except Exception as e:
