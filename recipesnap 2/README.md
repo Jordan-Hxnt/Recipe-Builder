@@ -29,14 +29,6 @@ Open http://localhost:8080
 
 Share the URL. Works on any phone browser.
 
-## Deploy to Fly.io
-
-```bash
-cp fly.toml.example fly.toml
-fly launch
-fly secrets set OPENROUTER_API_KEY=sk-or-...
-fly deploy
-```
 
 ## How it works
 
